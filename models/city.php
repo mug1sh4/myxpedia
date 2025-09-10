@@ -9,6 +9,14 @@ class City {
         $this->conn = $db->connect();
     }
 
+    public function cityExists($name, $countryID) {
+    $sql = "SELECT COUNT(*) FROM City WHERE CityName = :name AND CountryID = :countryID";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([':name' => $name, ':countryID' => $countryID]);
+    return $stmt->fetchColumn() > 0;
+}
+
+
     public function create($name, $countryID) {
         $sql = "INSERT INTO City (CityName, CountryID) VALUES (:name, :countryID)";
         $stmt = $this->conn->prepare($sql);
