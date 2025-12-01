@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users Manager</title>
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/all.css">
+</head>
+<body>
+<div class="container-fluid mt-4">
+  <div class="row">
+    <!-- Left-hand side: User list -->
+    <div class="col-md-3" id="users">
+      <div class="card">
+        <div class="card-header">
+          <h6>Existing Users</h6>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="existingusers">Select a User</label>
+            <select name="existingusers" id="existingusers" class="form-control form-control-sm"></select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right-hand side: User details + privileges -->
+    <div class="col-md-9" id="userdetails">
+      <div class="card mb-3">
+        <div class="card-header">
+          <h6>User Details</h6>
+        </div>
+        <div class="card-body" id="usersdetails">
+          <div class="row">
+            <div class="col form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" class="form-control form-control-sm">
+            </div>
+            <div class="col form-group">
+              <label for="firstname">First Name</label>
+              <input type="text" id="firstname" class="form-control form-control-sm">
+            </div>
+            <div class="col form-group">
+              <label for="lastname">Last Name</label>
+              <input type="text" id="lastname" class="form-control form-control-sm">
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" class="form-control form-control-sm">
+            </div>
+            <div class="col form-group">
+              <label for="confirmpassword">Confirm Password</label>
+              <input type="password" id="confirmpassword" class="form-control form-control-sm">
+            </div>
+            <div class="col form-group">
+              <label for="changepasswordonlogin">Change Password on Login</label>
+              <select id="changepasswordonlogin" class="form-control form-control-sm">
+                <option value="0">No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col form-group">
+              <label for="mobile">Mobile</label>
+              <input type="text" id="mobile" class="form-control form-control-sm">
+            </div>
+            <div class="col form-group">
+              <label for="emailaddress">Email Address</label>
+              <input type="text" id="emailaddress" class="form-control form-control-sm">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Privileges -->
+      <div class="card mb-3" id="userprivileges">
+        <div class="card-header">
+          <h6>User Privileges</h6>
+        </div>
+        <div class="card-body">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Object</th>
+                <th>Privilege</th>
+                <th>Date Added</th>
+              </tr>
+            </thead>
+            <tbody id="privilegesTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="buttons" class="mt-2">
+        <button class="btn btn-success btn-sm" id="saveuser">
+          <i class="fa fa-save fa-lg fa-fw"></i> Save User
+        </button>
+        <button class="btn btn-outline-danger btn-sm" id="clearfields">
+          <i class="fas fa-trash fa-lg fa-fw"></i> Clear Fields
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/jquery-3.7.1.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script>
+$(function() {
+  // Load users into dropdown
+  $.getJSON("controllers/useroperations.php", function(data) {
+    let options = "<option value=''>-- Select User --</option>";
+    data.forEach(user => {
+      options += `<option value='${user.UserID}'>${user.Username}</option>`;
+    });
+    $("#existingusers").html(options);
+  });
+
+  // Load user details
+  $("#existingusers").on("change", function() {
+    const userId = $(this).val();
+    if (userId) {
+      $.getJSON("controllers/useroperations.php?id=" + userId, function(user) {
+        $("#username").val(user.Username);
+        $("#firstname").val(user.FirstName);
+        $("#lastname").val(user.LastName);
+        $("#mobile").val(user.Mobile);
+        $("#emailaddress").val(user.EmailAddress);
+      });
+    }
+  });
+
+  // Save user
+  $("#saveuser").on("click", function() {
+    if ($("#password").val() !== $("#confirmpassword").val()) {
+      alert("Passwords do not match!");
+      return;
+    }
+    const payload = {
+      Username: $("#username").val(),
+      FirstName: $("#firstname").val(),
+      LastName: $("#lastname").val(),
+      Password: $("#password").val(), // send plain password
+      Mobile: $("#mobile").val(),
+      EmailAddress: $("#emailaddress").val(),
+      SystemAdmin: 0,
+      AddedBy: 1
+    };
+    $.ajax({
+      url: "controllers/useroperations.php",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify(payload),
+      success: function(response) {
+        alert(response.success ? "User saved successfully!" : "Error: " + response.error);
+      },
+      error: function(xhr) {
+        alert("Request failed: " + xhr.responseText);
+      }
+    });
+  });
+
+  // Clear fields
+  $("#clearfields").on("click", function() {
+    $("#usersdetails input").val("");
+    $("#changepasswordonlogin").val("0");
+  });
+});
+</script>
+</body>
+</html>
